@@ -13,10 +13,10 @@ ignore = [
   # flake8-copyright (CPY)
   "CPY001",  # missing-copyright-notice: unnecessary
   # pydocstyle (D)
-  "D203",  # one-blank-line-before-class: conflicts with no-blank-line-before-class (D211)
   "D100",  # undocumented-public-module: excessive
   "D104",  # undocumented-public-package: excessive
   "D103",  # undocumented-public-function: excessive
+  "D203",  # one-blank-line-before-class: conflicts with no-blank-line-before-class (D211)
   "D213",  # multi-line-summary-second-line: conflicts with multi-line-summary-second-line (D212)
   # eradicate (ERA)
   "ERA001",  # commented-out-code: helpful for examples
