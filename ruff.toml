@@ -1,0 +1,35 @@
+# python version
+target-version = "py311"
+# enable unstable rules and fixes
+preview = true
+[lint]
+# enable all rules
+select = ["ALL"]
+# disable select rules
+ignore = [
+  # flake8-annotations (ANN)
+  "ANN101",  # missing-type-self: unnecessary, can be inferred from context
+  "ANN102",  # missing-type-cls: unnecessary, can be inferred from context
+  # flake8-copyright (CPY)
+  "CPY001",  # missing-copyright-notice: unnecessary
+  # pydocstyle (D)
+  "D203",  # one-blank-line-before-class: conflicts with no-blank-line-before-class (D211)
+  "D100",  # undocumented-public-module: excessive
+  "D104",  # undocumented-public-package: excessive
+  "D103",  # undocumented-public-function: excessive
+  "D213",  # multi-line-summary-second-line: conflicts with multi-line-summary-second-line (D212)
+  # eradicate (ERA)
+  "ERA001",  # commented-out-code: helpful for examples
+  # pycodestyle (E)
+  "E741",  # ambiguous-variable-name: I like short names
+  # pylint refactor (PLR)
+  "PLR2004",  # magic-value-comparison: sometimes you need a little magic
+  # flake8-bandit (S)
+  "S101", # assert: helpful for type checking
+]
+[lint.mccabe]
+max-complexity = 5  # be generous
+[lint.pylint]
+max-bool-expr = 5  # too-many-boolean-expressions (PLR0916): something reasonable
+max-branches = 5  # too-many-branches (PLR0912): something reasonable
+max-returns = 5  # too-many-return-statements (PLR0911): something reasonable
