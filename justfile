@@ -15,4 +15,4 @@ install-deps:
 
 # run the app module
 run:
-	python -m app
+	python -m dickens.app

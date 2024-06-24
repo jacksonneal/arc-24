@@ -1,2 +1,5 @@
+flax
+jax[cuda12]
 loguru
+matplotlib
 msgspec

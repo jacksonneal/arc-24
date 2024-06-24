@@ -20,6 +20,8 @@ ignore = [
   "D213",  # multi-line-summary-second-line: conflicts with multi-line-summary-second-line (D212)
   # eradicate (ERA)
   "ERA001",  # commented-out-code: helpful for examples
+  # pandas-vet (PD)
+  "PD008",  # pandas-use-of-dot-at: false-positives
   # pycodestyle (E)
   "E741",  # ambiguous-variable-name: I like short names
   # pylint refactor (PLR)
