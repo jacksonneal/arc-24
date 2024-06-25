@@ -10,28 +10,31 @@ ignore = [
   # flake8-annotations (ANN)
   "ANN101",  # missing-type-self: unnecessary, can be inferred from context
   "ANN102",  # missing-type-cls: unnecessary, can be inferred from context
+  "ANN401",  # any-type: allow use of `Any`
   # flake8-copyright (CPY)
-  "CPY001",  # missing-copyright-notice: unnecessary
+  "CPY001",  # missing-copyright-notice: not copyrighting anything
+  # flake8-return (RET)
+  "RET504",  # unnecessary-assign: nice to assign flow
   # pydocstyle (D)
-  "D100",  # undocumented-public-module: excessive
-  "D104",  # undocumented-public-package: excessive
-  "D103",  # undocumented-public-function: excessive
   "D203",  # one-blank-line-before-class: conflicts with no-blank-line-before-class (D211)
   "D213",  # multi-line-summary-second-line: conflicts with multi-line-summary-second-line (D212)
+  "D400",  # ends-in-period: periods are boring
+  "D401",  # section-name-ends-in-colon: prefer numpy style new-line-after-section-name (D406)
+  "D416",  # non-imperative-mood: my mood says this is not imperative
   # eradicate (ERA)
-  "ERA001",  # commented-out-code: helpful for examples
+  "ERA001",  # commented-out-code: code comments helpful for examples
   # pandas-vet (PD)
-  "PD008",  # pandas-use-of-dot-at: false-positives
+  "PD008",  # pandas-use-of-dot-at: observed false-positives with `jax.Array`
   # pycodestyle (E)
   "E741",  # ambiguous-variable-name: I like short names
   # pylint refactor (PLR)
   "PLR2004",  # magic-value-comparison: sometimes you need a little magic
   # flake8-bandit (S)
-  "S101", # assert: helpful for type checking
+  "S101", # assert: asserts are helpful for logic validation, type-checking
 ]
 [lint.mccabe]
-max-complexity = 5  # be generous
+max-complexity = 5  # complex-structure (C901): be reasonable
 [lint.pylint]
-max-bool-expr = 5  # too-many-boolean-expressions (PLR0916): something reasonable
-max-branches = 5  # too-many-branches (PLR0912): something reasonable
-max-returns = 5  # too-many-return-statements (PLR0911): something reasonable
+max-bool-expr = 5  # too-many-boolean-expressions (PLR0916): be reasonable
+max-branches = 5  # too-many-branches (PLR0912): be reasonable
+max-returns = 5  # too-many-return-statements (PLR0911): be reasonable

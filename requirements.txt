@@ -3,3 +3,7 @@ jax[cuda12]
 loguru
 matplotlib
 msgspec
+numpy<2.0.0
+optax
+torch
+tqdm
