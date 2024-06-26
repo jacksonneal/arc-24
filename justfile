@@ -13,6 +13,6 @@ install-uv:
 install-deps:
 	uv pip install -r requirements.txt
 
-# run the app module
+# run the dickens
 run:
 	python -m dickens.app

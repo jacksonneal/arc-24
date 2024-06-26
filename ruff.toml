@@ -13,8 +13,6 @@ ignore = [
   "ANN401",  # any-type: allow use of `Any`
   # flake8-copyright (CPY)
   "CPY001",  # missing-copyright-notice: not copyrighting anything
-  # flake8-return (RET)
-  "RET504",  # unnecessary-assign: nice to assign flow
   # pydocstyle (D)
   "D203",  # one-blank-line-before-class: conflicts with no-blank-line-before-class (D211)
   "D213",  # multi-line-summary-second-line: conflicts with multi-line-summary-second-line (D212)
@@ -23,12 +21,14 @@ ignore = [
   "D416",  # non-imperative-mood: my mood says this is not imperative
   # eradicate (ERA)
   "ERA001",  # commented-out-code: code comments helpful for examples
-  # pandas-vet (PD)
-  "PD008",  # pandas-use-of-dot-at: observed false-positives with `jax.Array`
   # pycodestyle (E)
   "E741",  # ambiguous-variable-name: I like short names
+  # pandas-vet (PD)
+  "PD008",  # pandas-use-of-dot-at: observed false-positives with `jax.Array`
   # pylint refactor (PLR)
   "PLR2004",  # magic-value-comparison: sometimes you need a little magic
+  # flake8-return (RET)
+  "RET504",  # unnecessary-assign: nice to assign flow
   # flake8-bandit (S)
   "S101", # assert: asserts are helpful for logic validation, type-checking
 ]

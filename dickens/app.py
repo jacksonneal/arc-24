@@ -8,8 +8,9 @@ import jax
 import jax.numpy as jnp
 import matplotlib.pyplot as plt
 import numpy as np
+import orbax.checkpoint
 import optax
-from flax.training import train_state
+from flax.training import orbax_utils, train_state
 from loguru import logger
 from numpy._typing import NDArray
 from torch.utils import data
@@ -205,10 +206,10 @@ def train_model(
     -------
         final model state
     """
-    for epoch in tqdm(range(num_epochs)):
+    for _epoch in tqdm(range(num_epochs)):
         for batch in data_loader:
             state, loss, acc = train_step(state, batch)
-            logger.debug(f"epoch: {epoch}, loss: {loss}, acc: {acc}")
+            # logger.debug(f"epoch: {epoch}, loss: {loss}, acc: {acc}")
     return state
 
 
@@ -253,7 +254,12 @@ if __name__ == "__main__":
 
     trained_model_state = train_model(model_state, data_loader, num_epochs=100)
 
+    ckpt = {"model": trained_model_state}
+    orbax_checkpointer = orbax.checkpoint.PyTreeCheckpointer()
+    save_args = orbax_utils.save_args_from_target(ckpt)
+    orbax_checkpointer.save(
+        "/tmp/flax_ckpt/orbax/single_save", ckpt, save_args=save_args,
+    )
+
     # visualize_samples(dataset.data, dataset.label)
     # plt.show()
-
-    # logger.debug(model.apply(params, inp))
