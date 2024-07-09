@@ -1,4 +1,4 @@
-# ruff: noqa: D101
+# ruff: noqa: D100, D101
 from pathlib import Path
 from typing import Annotated
 

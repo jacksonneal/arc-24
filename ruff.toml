@@ -10,27 +10,46 @@ ignore = [
   # flake8-annotations (ANN)
   "ANN101",  # missing-type-self: unnecessary, can be inferred from context
   "ANN102",  # missing-type-cls: unnecessary, can be inferred from context
-  "ANN401",  # any-type: allow use of `Any`
+  "ANN401",  # any-type: allow use of `typing.Any`
+  # flake8-commas (COM)
+  "COM812",  # missing-trailing-comma: conflicts with formatter
+  "COM819",  # prohibited-trailing-comma: conflicts with formatter
   # flake8-copyright (CPY)
   "CPY001",  # missing-copyright-notice: not copyrighting anything
   # pydocstyle (D)
   "D203",  # one-blank-line-before-class: conflicts with no-blank-line-before-class (D211)
+  "D206",  # indent-with-spaces: conflicts with formatter
   "D213",  # multi-line-summary-second-line: conflicts with multi-line-summary-second-line (D212)
+  "D300",  # triple-single-quotes: conflicts with formatter
   "D400",  # ends-in-period: periods are boring
   "D401",  # section-name-ends-in-colon: prefer numpy style new-line-after-section-name (D406)
   "D416",  # non-imperative-mood: my mood says this is not imperative
   # eradicate (ERA)
-  "ERA001",  # commented-out-code: code comments helpful for examples
+  "ERA001",  # commented-out-code: code comments are helpful for examples
   # pycodestyle (E)
+  "E111",  # indentation-with-invalid-multiple: conflicts with formatter
+  "E114",  # indentation-with-invalid-multiple-comment: conflicts with formatter
+  "E117",  # over-indented: conflicts with formatter
+  "E501",  # line-too-long: conflicts with formatter
   "E741",  # ambiguous-variable-name: I like short names
+  # flake8-implicit-str-concat (ISC)
+  "ISC001",  # single-line-implicit-string-concatentation: conflicts with formatter
+  "ISC002",  # multi-line-implicit-string-concatentation: conflicts with formatter
   # pandas-vet (PD)
   "PD008",  # pandas-use-of-dot-at: observed false-positives with `jax.Array`
   # pylint refactor (PLR)
   "PLR2004",  # magic-value-comparison: sometimes you need a little magic
+  # flake8-quotes (Q)
+  "Q000",  # bad-quotes-inline-string: conflicts with formatter
+  "Q001",  # bad-quotes-multiline-string: conflicts with formatter
+  "Q002",  # bad-quotes-docstring: conflicts with formatter
+  "Q003",  # avoidable-escaped-quote: conflicts with formatter
   # flake8-return (RET)
-  "RET504",  # unnecessary-assign: nice to assign flow
+  "RET504",  # unnecessary-assign: sometimes nice to assign in pattern
   # flake8-bandit (S)
   "S101", # assert: asserts are helpful for logic validation, type-checking
+  # pycodestyle (W)
+  "W191", # tab-indentation: conflicts with formatter
 ]
 [lint.mccabe]
 max-complexity = 5  # complex-structure (C901): be reasonable

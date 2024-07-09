@@ -1,20 +1,66 @@
+# ruff: noqa: S108
 """Classifier for continuous XOR dataset."""
+from __future__ import annotations
 
-from collections.abc import Mapping
-from typing import Any
+import inspect
+import logging
+import sys
+from typing import TYPE_CHECKING, Any
 
 import flax.linen as nn
 import jax
 import jax.numpy as jnp
+import loguru
 import matplotlib.pyplot as plt
 import numpy as np
-import orbax.checkpoint
 import optax
-from flax.training import orbax_utils, train_state
+import orbax.checkpoint
+from flax.training import train_state
 from loguru import logger
-from numpy._typing import NDArray
+from matplotlib.colors import to_rgba
 from torch.utils import data
 from tqdm.auto import tqdm
+
+if TYPE_CHECKING:
+    from collections.abc import Callable, Mapping
+
+    from numpy._typing import NDArray
+
+
+class InterceptHandler(logging.Handler):
+    def emit(self, record: logging.LogRecord) -> None:
+        # Get corresponding Loguru level if it exists.
+        level: str | int
+        try:
+            level = logger.level(record.levelname).name
+        except ValueError:
+            level = record.levelno
+
+        # Find caller from where originated the logged message.
+        frame, depth = inspect.currentframe(), 0
+        while frame and (depth == 0 or frame.f_code.co_filename == logging.__file__):
+            frame = frame.f_back
+            depth += 1
+
+        logger.opt(depth=depth, exception=record.exc_info).log(
+            level, record.getMessage()
+        )
+
+
+logging.basicConfig(handlers=[InterceptHandler()], level=0, force=True)
+
+
+def my_filter(record: loguru.Record) -> bool:
+    if record["name"] in {
+        "absl.logging",
+        "asyncio.selector_events",
+    } or record["name"].startswith("jax._src"):
+        return False
+    return True
+
+
+logger.remove()
+logger.add(sys.stderr, filter=my_filter, level="INFO")
 
 
 class SimpleClassifier(nn.Module):
@@ -41,7 +87,7 @@ class XORDataset(data.Dataset):
     data: NDArray[np.float32]
     """XY pairs."""
 
-    label: NDArray[np.int32]
+    labels: NDArray[np.int32]
     """Data labels."""
 
     def __init__(self, *, size: int, seed: int, std: float) -> None:
@@ -67,12 +113,12 @@ class XORDataset(data.Dataset):
         data = self.np_rng.randint(low=0, high=2, size=(self.size, 2)).astype(
             np.float32,
         )
-        label = (data.sum(axis=1) == 1).astype(np.int32)
+        labels = (data.sum(axis=1) == 1).astype(np.int32)
         # add noise
         data += self.np_rng.normal(loc=0.0, scale=self.std, size=data.shape)
 
         self.data = data
-        self.labels = label
+        self.labels = labels
 
     def __len__(self) -> int:
         """Number of data points."""
@@ -185,6 +231,7 @@ def eval_step(
 def train_model(
     state: train_state.TrainState,
     data_loader: data.DataLoader,
+    epoch_cb: Callable[[int, train_state.TrainState], None],
     *,
     num_epochs: int,
 ) -> train_state.TrainState:
@@ -196,6 +243,8 @@ def train_model(
             model state
         data_loader:
             dataset and sampler
+        epoch_cb:
+            called each epoch with current train state
 
     Keyword Args
     ------------
@@ -206,17 +255,17 @@ def train_model(
     -------
         final model state
     """
-    for _epoch in tqdm(range(num_epochs)):
+    for epoch in tqdm(range(num_epochs)):
         for batch in data_loader:
             state, loss, acc = train_step(state, batch)
-            # logger.debug(f"epoch: {epoch}, loss: {loss}, acc: {acc}")
+        epoch_cb(epoch, state)
     return state
 
 
-def visualize_samples(data: NDArray[np.float32], label: NDArray[np.int32]) -> None:
+def visualize_samples(data: NDArray[np.float32], labels: NDArray[np.int32]) -> None:
     """Plot XOR data and labels."""
-    data_0 = data[label == 0]
-    data_1 = data[label == 1]
+    data_0 = data[labels == 0]
+    data_1 = data[labels == 1]
 
     plt.figure(figsize=(4, 4))
     plt.scatter(data_0[:, 0], data_0[:, 1], edgecolor="#333", label="Class 0")
@@ -236,9 +285,9 @@ if __name__ == "__main__":
     inp = jax.random.normal(inp_rng, (8, 2))  # batch size 8, input size 2
     params = model.init(init_rng, inp)
 
-    dataset = XORDataset(size=2500, seed=42, std=0.1)
-    data_loader = data.DataLoader(
-        dataset,
+    train_dataset = XORDataset(size=2500, seed=42, std=0.1)
+    train_data_loader = data.DataLoader(
+        train_dataset,
         batch_size=128,
         shuffle=True,
         collate_fn=numpy_collate,
@@ -252,14 +301,84 @@ if __name__ == "__main__":
         tx=optimizer,
     )
 
-    trained_model_state = train_model(model_state, data_loader, num_epochs=100)
-
-    ckpt = {"model": trained_model_state}
-    orbax_checkpointer = orbax.checkpoint.PyTreeCheckpointer()
-    save_args = orbax_utils.save_args_from_target(ckpt)
-    orbax_checkpointer.save(
-        "/tmp/flax_ckpt/orbax/single_save", ckpt, save_args=save_args,
-    )
-
-    # visualize_samples(dataset.data, dataset.label)
+    # visualize_samples(train_dataset.data, train_dataset.labels)
     # plt.show()
+
+    with orbax.checkpoint.CheckpointManager(
+        orbax.checkpoint.test_utils.erase_and_create_empty(
+            "/tmp/flax_ckpt/orbax/managed"
+        ),
+        options=orbax.checkpoint.CheckpointManagerOptions(),
+    ) as ckpt_mngr:
+
+        def epoch_cb(epoch, state) -> None:
+            ckpt_mngr.save(epoch, args=orbax.checkpoint.args.StandardSave(state))
+            ckpt_mngr.wait_until_finished()
+
+        trained_state = train_model(
+            model_state, train_data_loader, epoch_cb, num_epochs=100
+        )
+
+        restored_state = ckpt_mngr.restore(
+            ckpt_mngr.latest_step(),
+            args=orbax.checkpoint.args.StandardRestore(trained_state),
+        )
+
+        test_dataset = XORDataset(size=500, seed=123, std=0.1)
+        test_data_loader = data.DataLoader(
+            test_dataset, batch_size=128, collate_fn=numpy_collate
+        )
+
+        def eval_model(
+            state: train_state.TrainState, data_loader: data.DataLoader
+        ) -> None:
+            all_accs, batch_sizes = [], []
+            for batch in data_loader:
+                batch_acc = eval_step(state, batch)
+                all_accs.append(batch_acc)
+                batch_sizes.append(batch[0].shape[0])
+            # Weighted average since some batches might be smaller
+            acc = sum(
+                [a * b for a, b in zip(all_accs, batch_sizes, strict=True)]
+            ) / sum(batch_sizes)
+            logger.debug(f"Accuracy of the model: {100.0 * acc:4.2f}%")
+
+        eval_model(restored_state, test_data_loader)
+
+        def visualize_classification(model, data, labels):
+            data_0 = data[labels == 0]
+            data_1 = data[labels == 1]
+
+            fig = plt.figure(figsize=(4, 4), dpi=500)
+            plt.scatter(data_0[:, 0], data_0[:, 1], edgecolor="#333", label="Class 0")
+            plt.scatter(data_1[:, 0], data_1[:, 1], edgecolor="#333", label="Class 1")
+            plt.title("Dataset samples")
+            plt.ylabel(r"$x_2$")
+            plt.xlabel(r"$x_1$")
+            plt.legend()
+
+            # Let's make use of a lot of operations we have learned above
+            c0 = np.array(to_rgba("C0"))
+            c1 = np.array(to_rgba("C1"))
+            x1 = jnp.arange(-0.5, 1.5, step=0.01)
+            x2 = jnp.arange(-0.5, 1.5, step=0.01)
+            xx1, xx2 = jnp.meshgrid(
+                x1, x2, indexing="ij"
+            )  # Meshgrid function as in numpy
+            model_inputs = np.stack([xx1, xx2], axis=-1)
+            logits = model(model_inputs)
+            preds = nn.sigmoid(logits)
+            output_image = (1 - preds) * c0[None, None] + preds * c1[
+                None, None
+            ]  # Specifying "None" in a dimension creates a new one
+            output_image = jax.device_get(
+                output_image
+            )  # Convert to numpy array. This only works for tensors on CPU, hence first push to CPU
+            plt.imshow(output_image, origin="lower", extent=(-0.5, 1.5, -0.5, 1.5))
+            plt.grid(False)
+            return fig
+
+        _ = visualize_classification(
+            model.bind(restored_state.params), test_dataset.data, test_dataset.labels
+        )
+        plt.show()
