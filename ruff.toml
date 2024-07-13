@@ -26,7 +26,7 @@ ignore = [
   "D416",  # non-imperative-mood: my mood says this is not imperative
   # eradicate (ERA)
   "ERA001",  # commented-out-code: code comments are helpful for examples
-  # pycodestyle (E)
+  # pycodestyle errors (E)
   "E111",  # indentation-with-invalid-multiple: conflicts with formatter
   "E114",  # indentation-with-invalid-multiple-comment: conflicts with formatter
   "E117",  # over-indented: conflicts with formatter
@@ -48,7 +48,7 @@ ignore = [
   "RET504",  # unnecessary-assign: sometimes nice to assign in pattern
   # flake8-bandit (S)
   "S101", # assert: asserts are helpful for logic validation, type-checking
-  # pycodestyle (W)
+  # pycodestyle warnings (W)
   "W191", # tab-indentation: conflicts with formatter
 ]
 [lint.mccabe]
